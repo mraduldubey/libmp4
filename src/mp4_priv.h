@@ -62,6 +62,7 @@
 #define MP4_AVC1                            0x61766331 /* "avc1" */
 #define MP4_HVC1                            0x68766331 /* "hvc1" */
 #define MP4_MP4A                            0x6d703461 /* "mp4a" */
+#define MP4_MP4V                            0x6d703476 /* "mp4v" */
 #define MP4_UUID                            0x75756964 /* "uuid" */
 #define MP4_MHLR                            0x6d686c72 /* "mhlr" */
 #define MP4_ROOT_BOX                        0x726f6f74 /* "root" */

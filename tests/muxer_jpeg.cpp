@@ -82,6 +82,17 @@ std::string format_2(int x)
 		return xStr;
 }
 
+std::string format_3(int x)
+{
+	auto xStr = std::to_string(x);
+	if (x < 10)
+		return "00" + xStr;
+	else if (x < 100)
+		return "0" + xStr;
+	else
+		return xStr;
+}
+
 int main(int argc, char **argv)
 {
 	int ret;
@@ -154,17 +165,17 @@ int main(int argc, char **argv)
 		};
 	
 	// for MP4_TRACK_TYPE_VIDEO
-	uint8_t tempsps = 39;
-	uint8_t *sps_temp = &tempsps;
+	//uint8_t tempsps = 39;
+	//uint8_t *sps_temp = &tempsps;
 	videotrack = mp4_mux_add_track(mux, &params);
-	struct mp4_video_decoder_config vdc;
+	struct mp4_video_decoder_config vdc; // TODO: discusssion pending
 	vdc.width = 960;
 	vdc.height = 480;
-	vdc.codec = MP4_VIDEO_CODEC_AVC;
-	vdc.avc.sps = sps_temp;
-	*(vdc.avc.pps) = 40;
-	vdc.avc.pps_size = 4;
-	vdc.avc.sps_size = 35;
+	vdc.codec = MP4_VIDEO_CODEC_MP4V;
+	//vdc.avc.sps = sps_temp;
+	//*(vdc.avc.pps) = 40;
+	//vdc.avc.pps_size = 4;
+	//vdc.avc.sps_size = 35;
 
 	mp4_mux_track_set_video_decoder_config(mux, videotrack, &vdc);
 	std::cout << "3\n";
@@ -172,31 +183,32 @@ int main(int argc, char **argv)
 	has_more_video = sample_count > 0;
 	current_track = videotrack;
 
-	// read h264 encoded frames
-	std::string prefPath = "../data/H264_YUV420_640x360/Raw_YUV420_640x360_00"; //xy.h264
-	std::string sufPath = ".h264"; 
+	// read jpeg encoded frames
+	std::string prefPath = "../data/frames/out_"; //xxx.jpg
+	std::string sufPath = ".jpg"; 
 
 	
-	int i = 0;
+	int i;
 	bool isKeyFrame;
-	for (i = 0; i < 42; ++i) // has_more_video
+	for (i = 1; i < 61; ++i) // has_more_video
 	{	
-		std::cout << "frame=>" << std::to_string(i + 1) <<"\n";
+		std::cout << "frame=>" << std::to_string(i) <<"\n";
 		struct mp4_track_sample sample;
 		struct mp4_mux_sample mux_sample;
 		int lc_video = 0;
 		step_ts += increment_ts;
 
-		if (i == 30 || i == 0)
-		{
-			isKeyFrame = true;
-		}
-		else
-		{
-			isKeyFrame = false;
-		}
-		std::string fNoStr = format_2(i);
+		// if (i == 30 || i == 0)
+		// {
+		// 	isKeyFrame = true;
+		// }
+		// else
+		// {
+		// 	isKeyFrame = false;
+		// }
+		std::string fNoStr = format_3(i);
 		std::string framePath = prefPath + fNoStr + sufPath;
+		std::cout << "framePath=>" << framePath << "\n";
 		std::ifstream file(framePath, std::ios::binary | std::ios::ate);
 		std::streamsize size = file.tellg();
 		file.seekg(0, std::ios::beg);
@@ -205,12 +217,12 @@ int main(int argc, char **argv)
 		char *buffer = new char[size];
 		std::cout << "alloc "<< size << " bytes\n";
 
-		if (crash_at == i + 1) // crash at i +1 th frame
+		if (crash_at == i) // crash at i th frame
 		{
-			raise(SIGSEGV);
+			//raise(SIGSEGV);
 		}
 
-		if (!(( i+ 1) % 10 ))
+		if (!(i % 10 ))
 		{
 			mp4_mux_sync(mux); // write per 10 frames
 		}
@@ -220,8 +232,8 @@ int main(int argc, char **argv)
 			video.id = 1;
 			mux_sample.buffer = (uint8_t *) buffer;
 			mux_sample.len = size;
-			mux_sample.sync = isKeyFrame ? 1 : 0;
-			mux_sample.dts = 512 * i; // harcoded - dts ?
+			mux_sample.sync = 0; //isKeyFrame ? 1 : 0;
+			mux_sample.dts = 512 * (i - 1); // harcoded - dts ?
 			std::cout << "sample add start\n";
 			mp4_mux_track_add_sample(mux, videotrack, &mux_sample);
 			std::cout<<"sample done" << i << std::endl;

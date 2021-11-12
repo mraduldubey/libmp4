@@ -48,7 +48,7 @@
 	} while (0)
 
 
-struct mp4_box *mp4_box_new(struct mp4_box *parent)
+struct mp4_box *mp4_box_new(struct mp4_box *parent) // allocate memory for mp4_box set parent
 {
 	struct mp4_box *box = calloc(1, sizeof(*box));
 	if (box == NULL) {

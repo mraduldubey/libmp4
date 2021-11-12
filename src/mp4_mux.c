@@ -318,6 +318,43 @@ static void mp4_mux_free(struct mp4_mux *mux)
 	free(mux);
 }
 
+static int 
+mp4_mux_track_set_mp4v_decoder_config(struct mp4_mux_track *track,
+						struct mp4_video_decoder_config *vdc)
+{
+	return 0;
+
+	int ret = 0;
+
+	ULOG_ERRNO_RETURN_ERR_IF(vdc == NULL, EINVAL);
+	ULOG_ERRNO_RETURN_ERR_IF(vdc->codec != MP4_VIDEO_CODEC_AVC, EPROTO);
+	// ULOG_ERRNO_RETURN_ERR_IF(vdc->avc.c_sps == NULL, EINVAL);
+	// ULOG_ERRNO_RETURN_ERR_IF(vdc->avc.sps_size == 0, EINVAL);
+	// ULOG_ERRNO_RETURN_ERR_IF(vdc->avc.c_pps == NULL, EINVAL);
+	// ULOG_ERRNO_RETURN_ERR_IF(vdc->avc.pps_size == 0, EINVAL);
+
+	// track->video.avc.sps_size = vdc->avc.sps_size;
+	// free(track->video.avc.sps);
+	// track->video.avc.sps = malloc(vdc->avc.sps_size);
+	// if (track->video.avc.sps == NULL) {
+	// 	ret = -ENOMEM;
+	// 	goto error;
+	// }
+	// memcpy(track->video.avc.sps, vdc->avc.c_sps, vdc->avc.sps_size);
+	// track->video.avc.pps_size = vdc->avc.pps_size;
+	// free(track->video.avc.pps);
+	// track->video.avc.pps = malloc(vdc->avc.pps_size);
+	// if (track->video.avc.pps == NULL) {
+	// 	ret = -ENOMEM;
+	// 	goto error;
+	// }
+	// memcpy(track->video.avc.pps, vdc->avc.c_pps, vdc->avc.pps_size);
+error:
+	mp4_video_decoder_config_destroy(&track->video);
+	return ret;
+	
+}
+
 
 static int
 mp4_mux_track_set_avc_decoder_config(struct mp4_mux_track *track,
@@ -558,32 +595,34 @@ static int mp4_mux_sync_internal(struct mp4_mux *mux, bool allow_boxes_after)
 	}
 	mux->duration = duration;
 
-	moov = mp4_box_new_container(NULL, MP4_MOVIE_BOX);
+	moov = mp4_box_new_container(NULL, MP4_MOVIE_BOX); // level 1 box - moov
 	if (moov == NULL) {
 		ret = -ENOMEM;
 		goto out;
 	}
 	/* Fill the box */
-	mp4_box_new_mvhd(moov, mux);
+	mp4_box_new_mvhd(moov, mux); // allocates memory for mp4_box which is child of moov box - type is mvhd
+
+	
 	list_walk_entry_forward(&mux->tracks, track, node)
 	{
 		/* Skip empty tracks */
 		if (track->samples.count == 0)
 			continue;
 		struct mp4_box *trak, *mdia, *minf, *dinf, *stbl;
-		trak = mp4_box_new_container(moov, MP4_TRACK_BOX);
+		trak = mp4_box_new_container(moov, MP4_TRACK_BOX); // moov.trak 
 		if (trak == NULL) {
 			ret = -ENOMEM;
 			goto out;
 		}
-		if (mp4_box_new_tkhd(trak, track) == NULL) {
+		if (mp4_box_new_tkhd(trak, track) == NULL) { // moov.track.tkhd 
 			ret = -ENOMEM;
 			goto out;
 		}
 		if (track->referenceTrackIdCount > 0) {
 			struct mp4_box *tref, *content;
 			tref = mp4_box_new_container(trak,
-						     MP4_TRACK_REFERENCE_BOX);
+						     MP4_TRACK_REFERENCE_BOX); // moov.trak.tref
 			if (tref == NULL) {
 				ret = -ENOMEM;
 				goto out;
@@ -602,20 +641,20 @@ static int mp4_mux_sync_internal(struct mp4_mux *mux, bool allow_boxes_after)
 				goto out;
 			}
 		}
-		mdia = mp4_box_new_container(trak, MP4_MEDIA_BOX);
+		mdia = mp4_box_new_container(trak, MP4_MEDIA_BOX); // moov.trak.mdia
 		if (mdia == NULL) {
 			ret = -ENOMEM;
 			goto out;
 		}
-		if (mp4_box_new_mdhd(mdia, track) == NULL) {
+		if (mp4_box_new_mdhd(mdia, track) == NULL) { // moov.trak.mdia.mdhd
 			ret = -ENOMEM;
 			goto out;
 		}
-		if (mp4_box_new_hdlr(mdia, track) == NULL) {
+		if (mp4_box_new_hdlr(mdia, track) == NULL) { // moov.trak.mdia.hdlr
 			ret = -ENOMEM;
 			goto out;
 		}
-		minf = mp4_box_new_container(mdia, MP4_MEDIA_INFORMATION_BOX);
+		minf = mp4_box_new_container(mdia, MP4_MEDIA_INFORMATION_BOX); // moov.track.mdia.minf
 		if (minf == NULL) {
 			ret = -ENOMEM;
 			goto out;
@@ -643,7 +682,7 @@ static int mp4_mux_sync_internal(struct mp4_mux *mux, bool allow_boxes_after)
 
 		/* Write META metadata */
 		if (has_meta_meta) {
-			if (mp4_box_new_meta(trak, &track->track_metadata) ==
+			if (mp4_box_new_meta(trak, &track->track_metadata) == // the metadata track is stored in the same track structure
 			    NULL) {
 				ret = -ENOMEM;
 				goto out;
@@ -682,7 +721,7 @@ static int mp4_mux_sync_internal(struct mp4_mux *mux, bool allow_boxes_after)
 
 		switch (track->type) {
 		case MP4_TRACK_TYPE_VIDEO:
-			if (mp4_box_new_vmhd(minf, track) == NULL) {
+			if (mp4_box_new_vmhd(minf, track) == NULL) { // moov.trak.mdia.minf.vmhd
 				ret = -ENOMEM;
 				goto out;
 			}
@@ -702,18 +741,18 @@ static int mp4_mux_sync_internal(struct mp4_mux *mux, bool allow_boxes_after)
 		default:
 			break;
 		}
-		dinf = mp4_box_new_container(minf, MP4_DATA_INFORMATION_BOX);
+		dinf = mp4_box_new_container(minf, MP4_DATA_INFORMATION_BOX); // moov.trak.mdia.minf.dinf
 		if (dinf == NULL) {
 			ret = -ENOMEM;
 			goto out;
 		}
 		mp4_box_new_dref(dinf, track);
-		stbl = mp4_box_new_container(minf, MP4_SAMPLE_TABLE_BOX);
+		stbl = mp4_box_new_container(minf, MP4_SAMPLE_TABLE_BOX); // moov.trak.mdia.minf.stbl
 		if (stbl == NULL) {
 			ret = -ENOMEM;
 			goto out;
 		}
-		if (mp4_box_new_stsd(stbl, track) == NULL) {
+		if (mp4_box_new_stsd(stbl, track) == NULL) { // moov.trak.mdia.minf.stbl.stsd // this needs to be a container
 			ret = -ENOMEM;
 			goto out;
 		}
@@ -793,14 +832,14 @@ static int mp4_mux_sync_internal(struct mp4_mux *mux, bool allow_boxes_after)
 		}
 	}
 	/* Write box at start */
-	ret = fseeko(mux->file, mux->boxes_offset, SEEK_SET);
+	ret = fseeko(mux->file, mux->boxes_offset, SEEK_SET); // seek to start - we did while mp4_mux_open
 	if (ret == -1) {
 		ret = -errno;
 		ULOG_ERRNO("fseeko", -ret);
 		goto out;
 	}
 	ret = moov->writer.func(
-		mux, moov, mux->data_offset - mux->boxes_offset);
+		mux, moov, mux->data_offset - mux->boxes_offset); // whole header is written here - starting from moov box and all its children
 	if (ret >= 0) {
 		/* Written, pad with a free */
 		end = mp4_box_free_write(
@@ -999,7 +1038,8 @@ mp4_mux_track_set_video_decoder_config(struct mp4_mux *mux,
 	int ret = 0;
 
 	ULOG_ERRNO_RETURN_ERR_IF((vdc->codec != MP4_VIDEO_CODEC_HEVC) &&
-					 (vdc->codec != MP4_VIDEO_CODEC_AVC),
+					 (vdc->codec != MP4_VIDEO_CODEC_AVC) && 
+					 (vdc->codec != MP4_VIDEO_CODEC_MP4V),
 				 EINVAL);
 	ULOG_ERRNO_RETURN_ERR_IF(mux == NULL, EINVAL);
 
@@ -1021,6 +1061,8 @@ mp4_mux_track_set_video_decoder_config(struct mp4_mux *mux,
 	case MP4_VIDEO_CODEC_HEVC:
 		ret = mp4_mux_track_set_hevc_decoder_config(track, vdc);
 		break;
+	case MP4_VIDEO_CODEC_MP4V:
+		ret = mp4_mux_track_set_mp4v_decoder_config(track, vdc);
 	default:
 		ULOGE("unsupported codec");
 		ret = -ENOSYS;
@@ -1279,8 +1321,8 @@ MP4_API int mp4_mux_track_add_scattered_sample(
 		return -ENOENT;
 
 	size_t total_size = 0;
-	for (int i = 0; i < sample->nbuffers; i++)
-		total_size += sample->len[i];
+	for (int i = 0; i < sample->nbuffers; i++) // nbuffers is always 1 - whole frame
+		total_size += sample->len[i]; // frame size 
 
 	ULOGD("adding a %ssample of size %zu at dts %" PRIi64
 	      " to track %d(type %d)",
@@ -1310,8 +1352,8 @@ MP4_API int mp4_mux_track_add_scattered_sample(
 
 	track->chunks.offsets[track->chunks.count] = offset;
 
-	if (sample->sync && track->type == MP4_TRACK_TYPE_VIDEO) {
-		ret = mp4_mux_grow_sync(track, 1);
+	if (sample->sync && track->type == MP4_TRACK_TYPE_VIDEO) { // if keyframe
+		ret = mp4_mux_grow_sync(track, 1); // increase the sync array, where we track the keyframes
 		if (ret != 0)
 			return ret;
 		track->sync.entries[track->sync.count] =
@@ -1319,7 +1361,7 @@ MP4_API int mp4_mux_track_add_scattered_sample(
 	}
 
 	for (int i = 0; i < sample->nbuffers; i++) {
-		ret = fwrite(sample->buffers[i], sample->len[i], 1, mux->file);
+		ret = fwrite(sample->buffers[i], sample->len[i], 1, mux->file); // write the frame with size len[0] to the file.
 		if (ret != 1) {
 			offset = fseeko(mux->file, offset, SEEK_SET);
 			if (offset == -1)
