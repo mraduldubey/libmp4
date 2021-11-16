@@ -217,16 +217,6 @@ int main(int argc, char **argv)
 		char *buffer = new char[size];
 		std::cout << "alloc "<< size << " bytes\n";
 
-		if (crash_at == i) // crash at i th frame
-		{
-			//raise(SIGSEGV);
-		}
-
-		if (!(i % 10 ))
-		{
-			mp4_mux_sync(mux); // write per 10 frames
-		}
-
 		if (file.read(buffer, size))
 		{
 			video.id = 1;
@@ -238,6 +228,17 @@ int main(int argc, char **argv)
 			mp4_mux_track_add_sample(mux, videotrack, &mux_sample);
 			std::cout<<"sample done" << i << std::endl;
 			// mp4_mux_sync(mux); // write per frame
+		}
+		
+		if (!(i % 10 ))
+		{
+			std::cout << "====SYNC=====\n";
+			mp4_mux_sync(mux); // write per 10 frames
+		}
+
+		if (crash_at == i) // crash at i th frame
+		{
+			raise(SIGSEGV);
 		}
 	}
 	
