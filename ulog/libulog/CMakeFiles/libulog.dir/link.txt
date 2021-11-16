@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC -shared -Wl,-soname,liblibulog.so -o liblibulog.so CMakeFiles/libulog.dir/ulog_read.c.o CMakeFiles/libulog.dir/ulog_write.c.o CMakeFiles/libulog.dir/ulog_write_bin.c.o CMakeFiles/libulog.dir/ulog_write_raw.c.o CMakeFiles/libulog.dir/ulog.cpp.o CMakeFiles/libulog.dir/ulog_write_android.c.o 

@@ -1,0 +1,18 @@
+ulogcat is the equivalent of Android 'logcat' for ulog messages, with a few
+additional features:
+
+* Support for the following types of log buffers:
+  - ulog
+  - kernel ring
+
+The contents of those buffers can be merged or viewed separately
+Options -k (kernel ring) and -u (ulog) specify buffers from which messages
+should be read, processed and merged.
+
+IMPORTANT NOTE: in order to support kernel ring messages, ulogcat relies
+on daemon kmsgd (in project ulog.git).
+On a Linux PC, the native syslog daemon may be interfering with daemon kmsgd and
+prevent option -k from working properly.
+
+* Output format can be one the following (optionally colored):
+  short, aligned, process, long, csv

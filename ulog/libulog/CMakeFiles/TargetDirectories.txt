@@ -1,0 +1,3 @@
+/mnt/disks/ssd/ws/libmp4/ulog/libulog/CMakeFiles/rebuild_cache.dir
+/mnt/disks/ssd/ws/libmp4/ulog/libulog/CMakeFiles/libulog.dir
+/mnt/disks/ssd/ws/libmp4/ulog/libulog/CMakeFiles/edit_cache.dir
