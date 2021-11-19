@@ -36,7 +36,6 @@
 #include <time.h>
 
 #define ULOG_TAG mp4_demux_test
-#include <ulog.h>
 ULOG_DECLARE_TAG(mp4_demux_test);
 
 #include <futils/futils.h>

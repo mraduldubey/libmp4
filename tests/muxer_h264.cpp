@@ -35,12 +35,8 @@
 #include <sstream>
 #include <signal.h>
 
-#include "futils/futils.h"
 #include "libmp4.h"
-
-#define ULOG_TAG mp4_mux_test
-#include <ulog.h>
-ULOG_DECLARE_TAG(mp4_mux_test);
+#include<list.h>
 
 
 char *mdata_video_keys[] = {"com.parrot.thermal.metaversion",
@@ -156,13 +152,15 @@ int main(int argc, char **argv)
 	// for MP4_TRACK_TYPE_VIDEO
 	uint8_t tempsps = 39;
 	uint8_t *sps_temp = &tempsps;
+	uint8_t temppps = 40;
+	uint8_t *pps_temp = &temppps;
 	videotrack = mp4_mux_add_track(mux, &params);
 	struct mp4_video_decoder_config vdc;
 	vdc.width = 960;
 	vdc.height = 480;
 	vdc.codec = MP4_VIDEO_CODEC_AVC;
 	vdc.avc.sps = sps_temp;
-	*(vdc.avc.pps) = 40;
+	vdc.avc.pps = pps_temp;
 	vdc.avc.pps_size = 4;
 	vdc.avc.sps_size = 35;
 
@@ -231,5 +229,5 @@ int main(int argc, char **argv)
 	
 	std::cout << "4\n";
 	free(sample_buffer);
-	//mp4_mux_close(mux);
+	mp4_mux_close(mux);
 }

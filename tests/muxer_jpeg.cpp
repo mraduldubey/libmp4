@@ -35,12 +35,9 @@
 #include <sstream>
 #include <signal.h>
 
-#include "futils/futils.h"
-#include "libmp4.h"
 
-#define ULOG_TAG mp4_mux_test
-#include <ulog.h>
-ULOG_DECLARE_TAG(mp4_mux_test);
+#include "libmp4.h"
+#include<list.h>
 
 
 char *mdata_video_keys[] = {"com.parrot.thermal.metaversion",
@@ -244,5 +241,5 @@ int main(int argc, char **argv)
 	
 	std::cout << "4\n";
 	free(sample_buffer);
-	//mp4_mux_close(mux);
+	mp4_mux_close(mux);
 }

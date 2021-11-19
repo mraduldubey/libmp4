@@ -185,7 +185,7 @@ int mp4_demux_open(const char *filename, struct mp4_demux **ret_obj)
 	if (ret < 0)
 		goto error;
 
-	mp4_box_log(mp4->root, ULOG_DEBUG);
+	mp4_box_log(mp4->root, 7); // ULOG_DEBUG = 7
 
 	*ret_obj = demux;
 	return 0;

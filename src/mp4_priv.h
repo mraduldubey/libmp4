@@ -49,10 +49,8 @@
 #endif /* !_WIN32 */
 
 #define ULOG_TAG libmp4
-#include <ulog.h>
-
-#include <futils/futils.h>
 #include <libmp4.h>
+#include <list.h>
 
 
 /* clang-format off */
