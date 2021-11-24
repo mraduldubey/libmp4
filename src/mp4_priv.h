@@ -44,6 +44,9 @@
 
 #ifdef _WIN32
 #	include <winsock2.h>
+#	include <sys/types.h>
+#	define fseeko fseek
+#	define ftello ftell
 #else /* !_WIN32 */
 #	include <arpa/inet.h>
 #endif /* !_WIN32 */
@@ -444,11 +447,10 @@ struct mp4_mux {
 
 #define MP4_READ_SKIP(_file, _nBytes, _readBytes)                              \
 	do {                                                                   \
-		__typeof__(_readBytes) _i_nBytes = _nBytes;                    \
+		size_t _i_nBytes = _nBytes;                                    \
 		if (_i_nBytes > 0) {                                           \
 			int _ret = fseeko(_file, _i_nBytes, SEEK_CUR);         \
 			if (_ret != 0) {                                       \
-				ULOG_ERRNO("fseeko", errno);                   \
 				return -errno;                                 \
 			}                                                      \
 			_readBytes += _i_nBytes;                               \
@@ -497,11 +499,11 @@ struct mp4_mux {
 
 #define MP4_WRITE_SKIP(_file, _byteCount, _writeBytes, _maxBytes)              \
 	do {                                                                   \
-		__typeof__(_byteCount) _i_nBytes = _byteCount;                 \
+		size_t _i_nBytes = _byteCount;                                 \
 		if (_writeBytes + _i_nBytes > _maxBytes)                       \
 			return -ENOSPC;                                        \
 		if (fseeko(_file, _i_nBytes, SEEK_CUR) != 0) {                 \
-			ULOG_ERRNO("fseeko", errno);                           \
+			ULOG_ERRNO("fseek", errno);                            \
 			return -errno;                                         \
 		}                                                              \
 		_writeBytes += _i_nBytes;                                      \
@@ -518,7 +520,7 @@ struct mp4_mux {
 				      (size_t)_actualSize,                     \
 				      (size_t)_computedSize);                  \
 			if (fseeko(_file, -_actualSize, SEEK_CUR) != 0) {      \
-				ULOG_ERRNO("fseeko", errno);                   \
+				ULOG_ERRNO("fseeko", errno);                    \
 				return -errno;                                 \
 			}                                                      \
 			size_t _count =                                        \
@@ -530,7 +532,7 @@ struct mp4_mux {
 			if (fseeko(_file,                                      \
 				   _actualSize - sizeof(uint32_t),             \
 				   SEEK_CUR) != 0) {                           \
-				ULOG_ERRNO("fseeko", errno);                   \
+				ULOG_ERRNO("fseeko", errno);                    \
 				return -errno;                                 \
 			}                                                      \
 		}                                                              \
