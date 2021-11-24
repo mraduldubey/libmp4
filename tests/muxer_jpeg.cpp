@@ -93,7 +93,7 @@ std::string format_3(int x)
 int main(int argc, char **argv)
 {
 	int ret;
-	uint64_t now;
+	uint64_t now = 18446744071626706816;
 
 	if (argc < 3) {
 		std::cout << "Missing param";
@@ -150,16 +150,15 @@ int main(int argc, char **argv)
 	int sample_count = 60;
 	
 	// params
-	struct mp4_mux_track_params params = {
-			.type = MP4_TRACK_TYPE_VIDEO,
-			.name = "VideoHandler",
-			.enabled = 1,
-			.in_movie = 1,
-			.in_preview = 0,
-			.timescale = 15360,
-			.creation_time = 18446744071626706816,
-			.modification_time = 18446744071626706816,
-		};
+	struct mp4_mux_track_params params;
+	params.type = MP4_TRACK_TYPE_VIDEO;
+	params.name = "VideoHandler";
+	params.enabled = 1;
+	params.in_movie = 1;
+	params.in_preview = 0;
+	params.timescale = 15360;
+	params.creation_time = 18446744071626706816;
+	params.modification_time = 18446744071626706816;
 	
 	// for MP4_TRACK_TYPE_VIDEO
 	//uint8_t tempsps = 39;

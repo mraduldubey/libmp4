@@ -300,7 +300,8 @@ int mp4_demux_seek(struct mp4_demux *demux,
 
 	mp4 = &demux->mp4;
 
-	list_walk_entry_forward(&mp4->tracks, tk, node)
+	struct list_node *start = &mp4->tracks;
+	custom_walk(start, tk, node, struct mp4_track)
 	{
 		if (tk->type == MP4_TRACK_TYPE_CHAPTERS)
 			continue;

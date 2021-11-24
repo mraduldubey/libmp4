@@ -74,7 +74,8 @@ void mp4_box_destroy(struct mp4_box *box)
 		return;
 
 	struct mp4_box *child = NULL, *tmp = NULL;
-	list_walk_entry_forward_safe(&box->children, child, tmp, node)
+	struct list_node *start = &box->children;
+	custom_safe_walk(start, child, tmp, node, struct mp4_box)
 	{
 		mp4_box_destroy(child);
 	}
@@ -124,7 +125,9 @@ static void mp4_box_log_internal(struct mp4_box *box,
 
 	struct mp4_box *child = NULL;
 	level_bf |= UINT64_C(1) << indent;
-	list_walk_entry_forward(&box->children, child, node)
+	struct list_node *start = &box->children;
+
+	custom_walk(start, child, node, struct mp4_box)
 	{
 		mp4_box_log_internal(child,
 				     level,
