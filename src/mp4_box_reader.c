@@ -1566,6 +1566,9 @@ static off_t mp4_box_stsd_read(struct mp4_file *mp4,
 				}
 				boxReadBytes += ret;
 				break;
+			case MP4_AUDIO_DECODER_CONFIG_BOX:
+				printf("Warning: skipping esds box\n");
+				break;
 			default:
 				ULOGE("unsupported decoder config box");
 				return -ENOSYS;
@@ -2557,11 +2560,14 @@ off_t mp4_box_children_read(struct mp4_file *mp4,
 		}
 
 		if ((parent->type == MP4_ILST_BOX) &&
-		    (box->type <= mp4->metaMetadataCount))
+			(box->type <= mp4->metaMetadataCount))
+		{
 			ULOGD("offset 0x%" PRIx64 " metadata box size %" PRIu32,
 			      (int64_t)ftello(mp4->file) - 8,
 			      box->size);
+		}
 		else
+		{
 			ULOGD("offset 0x%" PRIx64
 			      " box '%c%c%c%c' size %" PRIu32,
 			      (int64_t)ftello(mp4->file) - 8,
@@ -2570,7 +2576,7 @@ off_t mp4_box_children_read(struct mp4_file *mp4,
 			      (box->type >> 8) & 0xFF,
 			      box->type & 0xFF,
 			      box->size);
-
+		}
 		if (box->size == 0) {
 			/* Box extends to end of file */
 			lastBox = 1;
