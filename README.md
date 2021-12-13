@@ -15,6 +15,3 @@ It is mainly targeted to be used with videos produced by Parrot Drones (Bebop, B
 - This will generate a `data/muxerjpeg.mp4` file with mp4v codec. 
 - Do similar thing for h264 video with sample h264 encoded frames.
 
-# For Ubuntu/linux:
-- Metadata support is not yet implemented.
-- Copy from win
