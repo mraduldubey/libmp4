@@ -291,7 +291,8 @@ get_seek_sample(struct mp4_track *tk, int start, enum mp4_seek_method method)
 
 int mp4_demux_seek(struct mp4_demux *demux,
 		   uint64_t time_offset,
-		   enum mp4_seek_method method)
+		   enum mp4_seek_method method,
+		   int *seekedToSample)
 {
 	struct mp4_track *tk = NULL;
 	struct mp4_file *mp4;
@@ -299,8 +300,9 @@ int mp4_demux_seek(struct mp4_demux *demux,
 	ULOG_ERRNO_RETURN_ERR_IF(demux == NULL, EINVAL);
 
 	mp4 = &demux->mp4;
-
-	list_walk_entry_forward(&mp4->tracks, tk, node)
+	printf("=============seeeking============\n");
+	struct list_node *start = &mp4->tracks;
+	custom_walk(start, tk, node, struct mp4_track)
 	{
 		if (tk->type == MP4_TRACK_TYPE_CHAPTERS)
 			continue;
@@ -308,6 +310,7 @@ int mp4_demux_seek(struct mp4_demux *demux,
 		int found = 0, i, idx = 0;
 		uint64_t ts =
 			mp4_usec_to_sample_time(time_offset, tk->timescale);
+		printf("====ts%d====", ts);
 		uint64_t newPendingSeekTime = 0;
 		int start = (unsigned int)(((uint64_t)tk->sampleCount * ts +
 					    tk->duration - 1) /
@@ -334,12 +337,14 @@ int mp4_demux_seek(struct mp4_demux *demux,
 		if (found) {
 			tk->nextSample = idx;
 			tk->pendingSeekTime = newPendingSeekTime;
-			ULOGD("seek to %" PRIu64 " -> sample #%d time %" PRIu64,
+			uint64_t t = mp4_sample_time_to_usec(
+				      tk->sampleDecodingTime[idx],
+				      tk->timescale);
+			printf("seek to %" PRIu64 " -> sample #%d time %" PRIu64,
 			      time_offset,
 			      idx,
-			      mp4_sample_time_to_usec(
-				      tk->sampleDecodingTime[idx],
-				      tk->timescale));
+			      t);
+			*seekedToSample = idx;
 			if (tk->metadata) {
 				if (((unsigned)idx <
 				     tk->metadata->sampleCount) &&
@@ -699,7 +704,8 @@ int mp4_demux_seek_to_track_prev_sample(struct mp4_demux *demux,
 	ts = mp4_sample_time_to_usec(tk->sampleDecodingTime[idx],
 				     tk->timescale);
 
-	return mp4_demux_seek(demux, ts, MP4_SEEK_METHOD_PREVIOUS_SYNC);
+	int seekedToSample;
+	return mp4_demux_seek(demux, ts, MP4_SEEK_METHOD_PREVIOUS_SYNC, &seekedToSample);
 }
 
 
@@ -725,7 +731,8 @@ int mp4_demux_seek_to_track_next_sample(struct mp4_demux *demux,
 	ts = mp4_sample_time_to_usec(tk->sampleDecodingTime[idx],
 				     tk->timescale);
 
-	return mp4_demux_seek(demux, ts, MP4_SEEK_METHOD_PREVIOUS);
+	int seekedToSample;
+	return mp4_demux_seek(demux, ts, MP4_SEEK_METHOD_PREVIOUS, &seekedToSample);
 }
 
 

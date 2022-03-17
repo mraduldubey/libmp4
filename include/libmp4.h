@@ -332,7 +332,8 @@ MP4_API int mp4_demux_get_track_next_sample_time_after(struct mp4_demux *demux,
 
 MP4_API int mp4_demux_seek(struct mp4_demux *demux,
 			   uint64_t time_offset,
-			   enum mp4_seek_method method);
+			   enum mp4_seek_method method,
+			   int *seekedToSample);
 
 
 MP4_API int mp4_demux_seek_to_track_prev_sample(struct mp4_demux *demux,

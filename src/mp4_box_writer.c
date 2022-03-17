@@ -79,7 +79,9 @@ static off_t mp4_box_container_write(struct mp4_mux *mux,
 	MP4_WRITE_32(mux->file, val32, bytesWritten, maxBytes);
 
 	/* Write all childrens */
-	list_walk_entry_forward(&box->children, child, node)
+
+	struct list_node *start = &box->children;
+	custom_walk(start, child, node, struct mp4_box)
 	{
 		if (child->writer.func == NULL)
 			continue;
@@ -1852,7 +1854,8 @@ mp4_box_keys_write(struct mp4_mux *mux, struct mp4_box *box, size_t maxBytes)
 	MP4_WRITE_32(mux->file, val32, bytesWritten, maxBytes);
 
 	/* 'entry_count' */
-	list_walk_entry_forward(meta_info->metadatas, meta, node)
+	struct list_node *start = meta_info->metadatas;
+	custom_walk(start, meta, node, struct mp4_mux_metadata)
 	{
 		if (meta->storage != MP4_MUX_META_META)
 			continue;
@@ -1862,7 +1865,8 @@ mp4_box_keys_write(struct mp4_mux *mux, struct mp4_box *box, size_t maxBytes)
 	MP4_WRITE_32(mux->file, val32, bytesWritten, maxBytes);
 
 	/* 'entries' */
-	list_walk_entry_forward(meta_info->metadatas, meta, node)
+	start = meta_info->metadatas;
+	custom_walk(start, meta, node, struct mp4_mux_metadata)
 	{
 		size_t len;
 		if (meta->storage != MP4_MUX_META_META)
@@ -2021,7 +2025,8 @@ static off_t mp4_box_ilst_write(struct mp4_mux *mux,
 	val32 = htonl(MP4_ILST_BOX);
 	MP4_WRITE_32(mux->file, val32, bytesWritten, maxBytes);
 
-	list_walk_entry_forward(meta_info->metadatas, meta, node)
+	struct list_node *start = meta_info->metadatas;
+	custom_walk(start, meta, node, struct mp4_mux_metadata)
 	{
 		off_t res;
 

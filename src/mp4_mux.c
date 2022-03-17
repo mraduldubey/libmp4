@@ -26,6 +26,7 @@
  */
 
 #include "mp4_priv.h"
+#include "list.h"
 
 #include <math.h>
 
@@ -46,7 +47,8 @@ static struct mp4_mux_track *mp4_mux_get_track(struct mp4_mux *mux,
 	if (track_id > mux->track_count)
 		return NULL;
 
-	list_walk_entry_forward(&mux->tracks, _track, node)
+	struct list_node *start = &mux->tracks;
+	custom_walk(start, _track, node, struct mp4_mux_track)
 	{
 		if (_track->id == track_id)
 			return _track;
@@ -262,7 +264,8 @@ static void mp4_mux_track_destroy(struct mp4_mux_track *track)
 	/* cover of the track*/
 	free(track->track_metadata.cover);
 
-	list_walk_entry_forward_safe(&track->metadatas, meta, tmp, node)
+	struct list_node *start = &track->metadatas;
+	custom_safe_walk(start, meta, tmp, node, struct mp4_mux_metadata)
 	{
 		free(meta->key);
 		free(meta->value);
@@ -302,12 +305,14 @@ static void mp4_mux_free(struct mp4_mux *mux)
 
 	free(mux->file_metadata.cover);
 
-	list_walk_entry_forward_safe(&mux->tracks, track, ttmp, node)
+	struct list_node *start = &mux->tracks;
+	custom_safe_walk(start, track, ttmp, node, struct mp4_mux_track)
 	{
 		mp4_mux_track_destroy(track);
 	}
-
-	list_walk_entry_forward_safe(&mux->metadatas, meta, mtmp, node)
+	
+	start = &mux->metadatas;
+	custom_safe_walk(start, meta, mtmp, node, struct mp4_mux_metadata)
 	{
 		free(meta->key);
 		free(meta->value);
@@ -580,8 +585,9 @@ static int mp4_mux_sync_internal(struct mp4_mux *mux, bool allow_boxes_after)
 		ULOG_ERRNO("mp4_box_mdat_write", -ret);
 		goto out;
 	}
-
-	list_walk_entry_forward(&mux->tracks, track, node)
+	
+	struct list_node *start = &mux->tracks;
+	custom_walk(start, track, node, struct mp4_mux_track)
 	{
 		ret = mp4_mux_track_compute_tts(mux, track);
 		if (ret < 0) {
@@ -603,8 +609,8 @@ static int mp4_mux_sync_internal(struct mp4_mux *mux, bool allow_boxes_after)
 	/* Fill the box */
 	mp4_box_new_mvhd(moov, mux); // allocates memory for mp4_box which is child of moov box - type is mvhd
 
-	
-	list_walk_entry_forward(&mux->tracks, track, node)
+	start = &mux->tracks;
+	custom_walk(start, track, node, struct mp4_mux_track)
 	{
 		/* Skip empty tracks */
 		if (track->samples.count == 0)
@@ -665,7 +671,8 @@ static int mp4_mux_sync_internal(struct mp4_mux *mux, bool allow_boxes_after)
 		has_meta_udta_root = 0;
 
 		/* Metadata */
-		list_walk_entry_forward(&track->metadatas, meta, node)
+		struct list_node *start = &track->metadatas;
+		custom_walk(start, meta, node, struct mp4_mux_metadata)
 		{
 			switch (meta->storage) {
 			case MP4_MUX_META_META:
@@ -707,7 +714,8 @@ static int mp4_mux_sync_internal(struct mp4_mux *mux, bool allow_boxes_after)
 				}
 			}
 			/* Directly write UDTA_ROOT metadata */
-			list_walk_entry_forward(&track->metadatas, meta, node)
+			struct list_node *start = &track->metadatas;
+			custom_walk(start, meta, node, struct mp4_mux_metadata)
 			{
 				if (meta->storage != MP4_MUX_META_UDTA_ROOT)
 					continue;
@@ -783,7 +791,8 @@ static int mp4_mux_sync_internal(struct mp4_mux *mux, bool allow_boxes_after)
 	has_meta_udta_root = 0;
 
 	/* Metadata */
-	list_walk_entry_forward(&mux->metadatas, meta, node)
+	start = &mux->metadatas;
+	custom_walk(start, meta, node, struct mp4_mux_metadata)
 	{
 		switch (meta->storage) {
 		case MP4_MUX_META_META:
@@ -821,7 +830,8 @@ static int mp4_mux_sync_internal(struct mp4_mux *mux, bool allow_boxes_after)
 			}
 		}
 		/* Directly write UDTA_ROOT metadata */
-		list_walk_entry_forward(&mux->metadatas, meta, node)
+		start = &mux->metadatas;
+		custom_walk(start, meta, node, struct mp4_mux_metadata)
 		{
 			if (meta->storage != MP4_MUX_META_UDTA_ROOT)
 				continue;
@@ -1203,7 +1213,8 @@ static int mp4_mux_add_metadata_internal(struct mp4_mux *mux,
 	}
 
 	/* Search for a metadata with the same key */
-	list_walk_entry_forward(local_meta, meta, node)
+	struct list_node *start = local_meta;
+	custom_walk(start, meta, node, struct mp4_mux_metadata)
 	{
 		if (strcmp(key, meta->key) != 0)
 			continue;
@@ -1393,7 +1404,8 @@ MP4_API void mp4_mux_dump(struct mp4_mux *mux)
 
 	ULOGI("- %d tracks: {", mux->track_count);
 
-	list_walk_entry_forward(&mux->tracks, track, node)
+	struct list_node *start = &mux->tracks;
+	custom_walk(start, track, node, struct mp4_mux_track)
 	{
 		mp4_mux_track_compute_tts(mux, track);
 		ULOGI("  - track %d of type %d: {", track->id, track->type);
@@ -1456,7 +1468,8 @@ MP4_API void mp4_mux_dump(struct mp4_mux *mux)
 	ULOGI("- metadatas: {");
 
 	struct mp4_mux_metadata *meta;
-	list_walk_entry_forward(&mux->metadatas, meta, node)
+	start = &mux->metadatas;
+	custom_walk(start, meta, node, struct mp4_mux_metadata)
 	{
 		ULOGI("  - %s :: %s [ type %d ]",
 		      meta->key,

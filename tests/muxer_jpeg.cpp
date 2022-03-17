@@ -34,7 +34,7 @@
 #include <fstream>
 #include <sstream>
 #include <signal.h>
-
+#include <string>
 
 #include "libmp4.h"
 #include<list.h>
@@ -93,7 +93,7 @@ std::string format_3(int x)
 int main(int argc, char **argv)
 {
 	int ret;
-	uint64_t now;
+	uint64_t now = 18446744071626706816;
 
 	if (argc < 3) {
 		std::cout << "Missing param";
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
 	unsigned int meta_file_count;
 	char **meta_file_keys = (char **) malloc(1 * sizeof(char*));
 	char **meta_file_vals = (char **) malloc(1 * sizeof(char*));
-
+	
 	int videotrack = -1;
 	int metatrack = -1;
 	int audiotrack = -1;
@@ -145,21 +145,24 @@ int main(int argc, char **argv)
 	const char *temp2 = "Lavf58.65.101";
 	
 	mp4_mux_add_file_metadata(mux, temp1, temp2);
+	temp1 = "vrsn";
+	temp2 = "1.0";
+	mp4_mux_add_file_metadata(mux, temp1, temp2);
+	
 	std::cout << "2\n";
 
 	int sample_count = 60;
 	
 	// params
-	struct mp4_mux_track_params params = {
-			.type = MP4_TRACK_TYPE_VIDEO,
-			.name = "VideoHandler",
-			.enabled = 1,
-			.in_movie = 1,
-			.in_preview = 0,
-			.timescale = 15360,
-			.creation_time = 18446744071626706816,
-			.modification_time = 18446744071626706816,
-		};
+	struct mp4_mux_track_params params;
+	params.type = MP4_TRACK_TYPE_VIDEO;
+	params.name = "VideoHandler";
+	params.enabled = 1;
+	params.in_movie = 1;
+	params.in_preview = 0;
+	params.timescale = 15360;
+	params.creation_time = 18446744071626706816;
+	params.modification_time = 18446744071626706816;
 	
 	// for MP4_TRACK_TYPE_VIDEO
 	//uint8_t tempsps = 39;
@@ -176,6 +179,41 @@ int main(int argc, char **argv)
 
 	mp4_mux_track_set_video_decoder_config(mux, videotrack, &vdc);
 	std::cout << "3\n";
+	struct mp4_mux_track_params params2 = {
+		.type = MP4_TRACK_TYPE_METADATA,
+		.name = "APRA METADATA",
+		.enabled = info.enabled,
+		.in_movie = info.in_movie,
+		.in_preview = info.in_preview,
+		.timescale = info.timescale,
+		.creation_time = info.creation_time,
+		.modification_time = info.modification_time,
+	};
+	metatrack = mp4_mux_add_track(mux, &params2);
+	mp4_mux_track_set_metadata_mime_type(
+		mux,
+		metatrack,
+		info.content_encoding,
+		info.mime_format);
+
+	if (info.type == MP4_TRACK_TYPE_METADATA && metatrack == -1) {
+		metatrack = mp4_mux_add_track(mux, &params2);
+		mp4_mux_track_set_metadata_mime_type(mux,
+						     metatrack,
+						     info.content_encoding,
+						     info.mime_format);
+		current_track = metatrack;
+	}
+
+	/* Add track reference */
+	if (metatrack > 0) {
+		ULOGI("metatrack = %d, videotrack = %d", metatrack, videotrack);
+		ret = mp4_mux_add_ref_to_track(mux, metatrack, videotrack);
+		if (ret != 0) {
+			ULOG_ERRNO("mp4_mux_add_ref_to_track", -ret);
+		}
+	}
+
 
 	has_more_video = sample_count > 0;
 	current_track = videotrack;
@@ -195,14 +233,6 @@ int main(int argc, char **argv)
 		int lc_video = 0;
 		step_ts += increment_ts;
 
-		// if (i == 30 || i == 0)
-		// {
-		// 	isKeyFrame = true;
-		// }
-		// else
-		// {
-		// 	isKeyFrame = false;
-		// }
 		std::string fNoStr = format_3(i);
 		std::string framePath = prefPath + fNoStr + sufPath;
 		std::cout << "framePath=>" << framePath << "\n";
@@ -224,13 +254,23 @@ int main(int argc, char **argv)
 			std::cout << "sample add start\n";
 			mp4_mux_track_add_sample(mux, videotrack, &mux_sample);
 			std::cout<<"sample done" << i << std::endl;
+			if (metatrack != -1) {
+				if (i == 1 || i == 10 || i == 30)
+				{
+					std::string temp = "frame_" + std::to_string(i);
+					mux_sample.buffer = (uint8_t *) temp.data();
+					mux_sample.len = 6 + std::to_string(i).length();
+					mp4_mux_track_add_sample(
+						mux, metatrack, &mux_sample);
+				}
+			}
 			// mp4_mux_sync(mux); // write per frame
 		}
 		
 		if (!(i % 10 ))
 		{
 			std::cout << "====SYNC=====\n";
-			mp4_mux_sync(mux); // write per 10 frames
+			//mp4_mux_sync(mux); // write per 10 frames
 		}
 
 		if (crash_at == i) // crash at i th frame
