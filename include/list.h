@@ -275,9 +275,11 @@ static inline int list_is_last(const struct list_node *list,
 
 #	define custom_safe_walk(list, pos, temp, member, type)                \
 		for (pos = (type *)((uintptr_t)list->next -                    \
-				    offsetof(type, member));                   \
+				    offsetof(type, member)),					\
+					temp = (type *)((uintptr_t)pos->member.next - 		\
+					offsetof(type, member));                   \
 		     &pos->member != (list);                                   \
-		     pos = (type *)((uintptr_t)pos->member.next -              \
+		     pos = temp, temp = (type *)((uintptr_t)temp->member.next -      \
 				    offsetof(type, member)))
 
 static inline size_t
