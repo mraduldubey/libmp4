@@ -115,7 +115,7 @@ int main(int argc, char **argv)
 	unsigned int meta_file_count;
 	char **meta_file_keys = (char **) malloc(1 * sizeof(char*));
 	char **meta_file_vals = (char **) malloc(1 * sizeof(char*));
-
+	
 	int videotrack = -1;
 	int metatrack = -1;
 	int audiotrack = -1;
@@ -145,6 +145,10 @@ int main(int argc, char **argv)
 	const char *temp2 = "Lavf58.65.101";
 	
 	mp4_mux_add_file_metadata(mux, temp1, temp2);
+	temp1 = "vrsn";
+	temp2 = "1.0";
+	mp4_mux_add_file_metadata(mux, temp1, temp2);
+	
 	std::cout << "2\n";
 
 	int sample_count = 60;
@@ -251,11 +255,14 @@ int main(int argc, char **argv)
 			mp4_mux_track_add_sample(mux, videotrack, &mux_sample);
 			std::cout<<"sample done" << i << std::endl;
 			if (metatrack != -1) {
-				std::string temp = "frame_" + std::to_string(i);
-				mux_sample.buffer = (uint8_t *) temp.data();
-				mux_sample.len = 6 + std::to_string(i).length();
-				mp4_mux_track_add_sample(
-					mux, metatrack, &mux_sample);
+				if (i == 1 || i == 10 || i == 30)
+				{
+					std::string temp = "frame_" + std::to_string(i);
+					mux_sample.buffer = (uint8_t *) temp.data();
+					mux_sample.len = 6 + std::to_string(i).length();
+					mp4_mux_track_add_sample(
+						mux, metatrack, &mux_sample);
+				}
 			}
 			// mp4_mux_sync(mux); // write per frame
 		}

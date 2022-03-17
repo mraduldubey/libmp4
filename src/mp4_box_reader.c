@@ -1456,12 +1456,13 @@ static off_t mp4_box_stsd_read(struct mp4_file *mp4,
 			/* 'size' */
 			MP4_READ_32(mp4->file, val32, boxReadBytes);
 			uint32_t size = ntohl(val32);
-			ULOGD("- stsd: size=%" PRIu32, size);
+			printf("- stsd: size=%" PRIu32, size);
+			printf("\n");
 
 			/* 'type' */
 			MP4_READ_32(mp4->file, val32, boxReadBytes);
 			uint32_t type = ntohl(val32);
-			ULOGD("- stsd: type=%c%c%c%c",
+			printf("- stsd: type=%c%c%c%c\n",
 			      (char)((type >> 24) & 0xFF),
 			      (char)((type >> 16) & 0xFF),
 			      (char)((type >> 8) & 0xFF),
@@ -1506,7 +1507,8 @@ static off_t mp4_box_stsd_read(struct mp4_file *mp4,
 			/* 'frame_count' */
 			MP4_READ_16(mp4->file, val16, boxReadBytes);
 			uint16_t frameCount = ntohs(val16);
-			ULOGD("- stsd: frame_count=%" PRIu16, frameCount);
+			printf("- stsd: frame_count=%" PRIu16, frameCount);
+			printf("\n");
 
 			/* 'compressorname' */
 			char compressorname[32];
@@ -1519,7 +1521,7 @@ static off_t mp4_box_stsd_read(struct mp4_file *mp4,
 				return -errno;
 			}
 			boxReadBytes += sizeof(compressorname);
-			ULOGD("- stsd: compressorname=%s", compressorname);
+			printf("- stsd: compressorname=%s\n", compressorname);
 
 			/* 'depth' & 'pre_defined' */
 			MP4_READ_32(mp4->file, val32, boxReadBytes);
@@ -1565,6 +1567,9 @@ static off_t mp4_box_stsd_read(struct mp4_file *mp4,
 					return ret;
 				}
 				boxReadBytes += ret;
+				break;
+			case MP4_AUDIO_DECODER_CONFIG_BOX:
+				printf("esds\n");
 				break;
 			default:
 				ULOGE("unsupported decoder config box");
