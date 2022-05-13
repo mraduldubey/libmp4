@@ -175,31 +175,20 @@ int main(int argc, char **argv)
 
 	mp4_mux_track_set_video_decoder_config(mux, videotrack, &vdc);
 	std::cout << "3\n";
-	struct mp4_mux_track_params params2 = {
-		.type = MP4_TRACK_TYPE_METADATA,
-		.name = "APRA METADATA",
-		.enabled = info.enabled,
-		.in_movie = info.in_movie,
-		.in_preview = info.in_preview,
-		.timescale = info.timescale,
-		.creation_time = info.creation_time,
-		.modification_time = info.modification_time,
-	};
+	struct mp4_mux_track_params params2;
+	params2 = params;
+	params2.type = MP4_TRACK_TYPE_METADATA;
+	params2.name = "APRA METADATA";
+
 	metatrack = mp4_mux_add_track(mux, &params2);
+	char *content_encoding = "base64";
+	char *mime_format = "video/mp4";
+
 	mp4_mux_track_set_metadata_mime_type(
 		mux,
 		metatrack,
-		info.content_encoding,
-		info.mime_format);
-
-	if (info.type == MP4_TRACK_TYPE_METADATA && metatrack == -1) {
-		metatrack = mp4_mux_add_track(mux, &params2);
-		mp4_mux_track_set_metadata_mime_type(mux,
-						     metatrack,
-						     info.content_encoding,
-						     info.mime_format);
-		current_track = metatrack;
-	}
+		content_encoding,
+		mime_format);
 
 	/* Add track reference */
 	if (metatrack > 0) {
@@ -208,28 +197,30 @@ int main(int argc, char **argv)
 		if (ret != 0) {
 			ULOG_ERRNO("mp4_mux_add_ref_to_track", -ret);
 		}
-	}
 
+	}
 
 	has_more_video = sample_count > 0;
 	current_track = videotrack;
 
 	// read jpeg encoded frames
-	std::string prefPath = "../data/frames/out_"; //xxx.jpg
+	std::string prefPath = "../data/streamer_frames/out_"; //xxx.jpg
 	std::string sufPath = ".jpg"; 
 
 	
 	int i;
 	bool isKeyFrame;
+	struct mp4_mux_sample mux_sample;
 	for (i = 1; i < 61; ++i) // has_more_video
 	{	
 		std::cout << "frame=>" << std::to_string(i) <<"\n";
-		struct mp4_track_sample sample;
-		struct mp4_mux_sample mux_sample;
+
 		int lc_video = 0;
 		step_ts += increment_ts;
 
+		printf("format_x\n");
 		std::string fNoStr = format_3(i);
+		printf("format_x done\n");
 		std::string framePath = prefPath + fNoStr + sufPath;
 		std::cout << "framePath=>" << framePath << "\n";
 		std::ifstream file(framePath, std::ios::binary | std::ios::ate);
@@ -263,7 +254,7 @@ int main(int argc, char **argv)
 		if (!(i % 10 ))
 		{
 			std::cout << "====SYNC=====\n";
-			//mp4_mux_sync(mux); // write per 10 frames
+			mp4_mux_sync(mux); // write per 10 frames
 		}
 
 		if (crash_at == i) // crash at i th frame

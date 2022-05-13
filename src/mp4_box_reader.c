@@ -1567,7 +1567,7 @@ static off_t mp4_box_stsd_read(struct mp4_file *mp4,
 				boxReadBytes += ret;
 				break;
 			case MP4_AUDIO_DECODER_CONFIG_BOX:
-				printf("Warning: skipping esds box\n");
+				printf("\nWarning: skipping stsd box\n");
 				break;
 			default:
 				ULOGE("unsupported decoder config box");

@@ -54,11 +54,11 @@ extern "C" {
 #		define SIZEOF_ARRAY(x) FUTILS_SIZEOF_ARRAY(x)
 #	endif
 
-#	define ULOG_ERRNO(_err, msg, ...) printf("%d %s", _err, msg)
-#	define ULOGE_ERRNO(_err, _fmt, ...) printf("%d %s", _err, _fmt)
+#	define ULOG_ERRNO(_err, msg, ...) do{} while(0) //printf("%d %s", _err, msg)
+#	define ULOGE_ERRNO(_err, _fmt, ...) do{} while(0) // printf("%d %s", _err, _fmt)
 #	define ULOGE(...) printf("ULOGE")
 #	define ULOGC(...) printf("ULOGC")
-#	define ULOGD(...) printf("ULOGD")
+#	define ULOGD(...) do{} while(0) //printf("ULOGD")
 #	define ULOGI(...) printf("ULOGI")
 #	define ULOGW(...) printf("ULOGW")
 #	define ULOGN(...) printf("ULOGN")
