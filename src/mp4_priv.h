@@ -56,6 +56,8 @@
 #include <list.h>
 
 
+#pragma comment(lib, "Ws2_32.lib")
+
 /* clang-format off */
 #define MP4_ISOM                            0x69736f6d /* "isom" */
 #define MP4_ISO2                            0x69736f32 /* "iso2" */
