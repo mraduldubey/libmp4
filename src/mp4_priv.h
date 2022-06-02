@@ -45,8 +45,13 @@
 #ifdef _WIN32
 #	include <winsock2.h>
 #	include <sys/types.h>
-#	define fseeko fseek
-#	define ftello ftell
+#	ifdef _WIN64
+#		define fseeko _fseeki64
+#		define ftello _ftelli64
+#	else
+#		define fseeko fseek
+#		define ftello ftell
+#	endif
 #else /* !_WIN32 */
 #	include <arpa/inet.h>
 #endif /* !_WIN32 */
@@ -272,8 +277,8 @@ struct mp4_track {
 
 struct mp4_file {
 	FILE *file;
-	off_t fileSize;
-	off_t readBytes;
+	ptrdiff_t fileSize;
+	ptrdiff_t readBytes;
 	struct mp4_box *root;
 	struct list_node tracks;
 	unsigned int trackCount;
@@ -595,9 +600,9 @@ void mp4_box_destroy(struct mp4_box *box);
 void mp4_box_log(struct mp4_box *box, int level);
 
 
-off_t mp4_box_children_read(struct mp4_file *mp4,
+ptrdiff_t mp4_box_children_read(struct mp4_file *mp4,
 			    struct mp4_box *parent,
-			    off_t maxBytes,
+			    ptrdiff_t maxBytes,
 			    struct mp4_track *track);
 
 
