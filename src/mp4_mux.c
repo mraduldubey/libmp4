@@ -555,7 +555,7 @@ static int mp4_mux_sync_internal(struct mp4_mux *mux, bool allow_boxes_after)
 	struct mp4_box *moov;
 	int ret;
 	uint32_t duration = 0;
-	off_t end;
+	ptrdiff_t end;
 	uint64_t len;
 
 	int has_meta_meta = 0;
@@ -1351,7 +1351,7 @@ MP4_API int mp4_mux_track_add_scattered_sample(
 	if (ret != 0)
 		return ret;
 
-	off_t offset = ftello(mux->file);
+	ptrdiff_t offset = ftello(mux->file);
 	if (offset == -1) {
 		ret = -errno;
 		return ret;

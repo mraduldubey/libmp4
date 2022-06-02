@@ -45,8 +45,13 @@
 #ifdef _WIN32
 #	include <winsock2.h>
 #	include <sys/types.h>
-#	define fseeko fseek
-#	define ftello ftell
+	#ifdef _WIN64
+	#	define fseeko _fseeki64
+	#	define ftello _ftelli64
+	#else
+	#	define fseeko fseek
+	#	define ftello ftell
+	#endif
 #else /* !_WIN32 */
 #	include <arpa/inet.h>
 #endif /* !_WIN32 */
