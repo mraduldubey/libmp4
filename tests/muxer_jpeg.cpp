@@ -165,8 +165,8 @@ int main(int argc, char **argv)
 	//uint8_t *sps_temp = &tempsps;
 	videotrack = mp4_mux_add_track(mux, &params);
 	struct mp4_video_decoder_config vdc; // TODO: discusssion pending
-	vdc.width = 960;
-	vdc.height = 480;
+	vdc.width = 3619;
+	vdc.height = 3619;
 	vdc.codec = MP4_VIDEO_CODEC_MP4V;
 	//vdc.avc.sps = sps_temp;
 	//*(vdc.avc.pps) = 40;
@@ -211,55 +211,45 @@ int main(int argc, char **argv)
 	int i;
 	bool isKeyFrame;
 	struct mp4_mux_sample mux_sample;
-	for (i = 1; i < 61; ++i) // has_more_video
+	std::string framePath = "../data/bigjpeg.jpg";
+	std::ifstream file(framePath, std::ios::binary | std::ios::ate);
+	std::streamsize size = file.tellg();
+	file.seekg(0, std::ios::beg);
+	char *buffer = new char[size];
+	file.read(buffer, size);
+	for (i = 1; i < 3000; ++i) // has_more_video
 	{	
 		std::cout << "frame=>" << std::to_string(i) <<"\n";
 
 		int lc_video = 0;
 		step_ts += increment_ts;
 
-		printf("format_x\n");
-		std::string fNoStr = format_3(i);
-		printf("format_x done\n");
-		std::string framePath = prefPath + fNoStr + sufPath;
-		std::cout << "framePath=>" << framePath << "\n";
-		std::ifstream file(framePath, std::ios::binary | std::ios::ate);
-		std::streamsize size = file.tellg();
-		file.seekg(0, std::ios::beg);
-
-		
-		char *buffer = new char[size];
-		std::cout << "alloc "<< size << " bytes\n";
-
-		if (file.read(buffer, size))
-		{
-			video.id = 1;
-			mux_sample.buffer = (uint8_t *) buffer;
-			mux_sample.len = size;
-			mux_sample.sync = 0; //isKeyFrame ? 1 : 0;
-			mux_sample.dts = 512 * (i - 1); // harcoded - dts ?
-			std::cout << "sample add start\n";
-			mp4_mux_track_add_sample(mux, videotrack, &mux_sample);
-			std::cout<<"sample done" << i << std::endl;
-			if (metatrack != -1) {
-				std::string temp = "frame_" + std::to_string(i);
-				mux_sample.buffer = (uint8_t *) temp.data();
-				mux_sample.len = 6 + std::to_string(i).length();
-				mp4_mux_track_add_sample(
-					mux, metatrack, &mux_sample);
-			}
-			// mp4_mux_sync(mux); // write per frame
+		video.id = 1;
+		mux_sample.buffer = (uint8_t *) buffer;
+		mux_sample.len = size;
+		mux_sample.sync = 0; //isKeyFrame ? 1 : 0;
+		mux_sample.dts = 512 * (i - 1); // harcoded - dts ?
+		std::cout << "sample add start\n";
+		mp4_mux_track_add_sample(mux, videotrack, &mux_sample);
+		std::cout<<"sample done" << i << std::endl;
+		if (metatrack != -1) {
+			std::string temp = "frame_" + std::to_string(i);
+			mux_sample.buffer = (uint8_t *) temp.data();
+			mux_sample.len = 6 + std::to_string(i).length();
+			mp4_mux_track_add_sample(
+				mux, metatrack, &mux_sample);
 		}
+		// mp4_mux_sync(mux); // write per frame
 		
-		if (!(i % 10 ))
+		if (!(i % 100 ))
 		{
 			std::cout << "====SYNC=====\n";
-			mp4_mux_sync(mux); // write per 10 frames
+			mp4_mux_sync(mux); // write per 100 frames
 		}
 
 		if (crash_at == i) // crash at i th frame
 		{
-			raise(SIGSEGV);
+			//raise(SIGSEGV);
 		}
 	}
 	
