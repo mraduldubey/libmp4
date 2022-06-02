@@ -61,7 +61,7 @@ static void print_info(struct mp4_demux *demux)
 
 	char creation_time_str[DATE_SIZE + 1];
 	char modification_time_str[DATE_SIZE + 1];
-	time_local_format(info.creation_time,
+	/*time_local_format(info.creation_time,
 			  0,
 			  TIME_FMT_LONG,
 			  creation_time_str,
@@ -70,7 +70,7 @@ static void print_info(struct mp4_demux *demux)
 			  0,
 			  TIME_FMT_LONG,
 			  modification_time_str,
-			  DATE_SIZE);
+			  DATE_SIZE);*/
 
 	printf("Media\n");
 	unsigned int hrs =
@@ -108,7 +108,7 @@ static void print_tracks(struct mp4_demux *demux)
 
 		char creation_time_str[DATE_SIZE + 1];
 		char modification_time_str[DATE_SIZE + 1];
-		time_local_format(tk.creation_time,
+		/*time_local_format(tk.creation_time,
 				  0,
 				  TIME_FMT_LONG,
 				  creation_time_str,
@@ -117,7 +117,7 @@ static void print_tracks(struct mp4_demux *demux)
 				  0,
 				  TIME_FMT_LONG,
 				  modification_time_str,
-				  DATE_SIZE);
+				  DATE_SIZE);*/
 
 		printf("Track #%d ID=%d\n", i, tk.id);
 		printf("  type: %s\n", mp4_track_type_str(tk.type));
@@ -425,14 +425,14 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	time_get_monotonic(&ts);
-	time_timespec_to_us(&ts, &start_time);
+	//time_get_monotonic(&ts);
+	//time_timespec_to_us(&ts, &start_time);
 
 	printf("opening demux\n");
 	ret = mp4_demux_open(argv[1], &demux);
 	printf("demux open\n");
-	time_get_monotonic(&ts);
-	time_timespec_to_us(&ts, &end_time);
+	//time_get_monotonic(&ts);
+	//time_timespec_to_us(&ts, &end_time);
 
 	if (ret < 0) {
 		ULOG_ERRNO("mp4_demux_open", -ret);

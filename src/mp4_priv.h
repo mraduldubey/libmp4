@@ -277,8 +277,8 @@ struct mp4_track {
 
 struct mp4_file {
 	FILE *file;
-	off_t fileSize;
-	off_t readBytes;
+	ptrdiff_t fileSize;
+	ptrdiff_t readBytes;
 	struct mp4_box *root;
 	struct list_node tracks;
 	unsigned int trackCount;
@@ -600,9 +600,9 @@ void mp4_box_destroy(struct mp4_box *box);
 void mp4_box_log(struct mp4_box *box, int level);
 
 
-off_t mp4_box_children_read(struct mp4_file *mp4,
+ptrdiff_t mp4_box_children_read(struct mp4_file *mp4,
 			    struct mp4_box *parent,
-			    off_t maxBytes,
+			    ptrdiff_t maxBytes,
 			    struct mp4_track *track);
 
 

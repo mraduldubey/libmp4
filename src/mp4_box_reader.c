@@ -2520,12 +2520,12 @@ static off_t mp4_box_meta_data_read(struct mp4_file *mp4,
 }
 
 
-off_t mp4_box_children_read(struct mp4_file *mp4,
+ptrdiff_t mp4_box_children_read(struct mp4_file *mp4,
 			    struct mp4_box *parent,
-			    off_t maxBytes,
+			    ptrdiff_t maxBytes,
 			    struct mp4_track *track)
 {
-	off_t parentReadBytes = 0;
+	ptrdiff_t parentReadBytes = 0;
 	int ret = 0, firstBox = 1, lastBox = 0;
 
 	ULOG_ERRNO_RETURN_ERR_IF(mp4 == NULL, EINVAL);
@@ -2533,7 +2533,7 @@ off_t mp4_box_children_read(struct mp4_file *mp4,
 
 	while ((!feof(mp4->file)) && (!lastBox) &&
 	       (parentReadBytes + 8 < maxBytes)) {
-		off_t boxReadBytes = 0, realBoxSize;
+		ptrdiff_t boxReadBytes = 0, realBoxSize;
 		uint32_t val32;
 
 		/* Keep the box in the tree */

@@ -113,7 +113,7 @@ static int mp4_metadata_build(struct mp4_file *mp4)
 int mp4_demux_open(const char *filename, struct mp4_demux **ret_obj)
 {
 	int ret;
-	off_t retBytes;
+	ptrdiff_t retBytes;
 	struct mp4_demux *demux;
 	struct mp4_file *mp4;
 

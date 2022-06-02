@@ -12,8 +12,8 @@ add_library(mp4lib ${HEADERS} ${SOURCE})
 
 add_executable(muxerjpeg tests/muxer_jpeg.cpp)
 add_executable(muxerh264 tests/muxer_h264.cpp)
-#add_executable(demuxerjpeg tests/demuxer_jpeg.cpp)
+add_executable(demuxerjpeg tests/demuxer_jpeg.cpp)
 
 target_link_libraries(muxerjpeg mp4lib ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(muxerh264 mp4lib ${CMAKE_THREAD_LIBS_INIT})
-#target_link_libraries(demuxerjpeg mp4lib ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(demuxerjpeg mp4lib ${CMAKE_THREAD_LIBS_INIT})
