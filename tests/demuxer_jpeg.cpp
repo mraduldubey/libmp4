@@ -325,16 +325,18 @@ static void print_frames(struct mp4_demux *demux)
 			i++;
 			break;
 		}
-
+		int timescale = tk.timescale;
+		uint64_t sample_ts = mp4_sample_time_to_usec(sample.dts, timescale);
 		printf("size=>%d\n", sample.size);
 		printf("Frame #%d size=%06" PRIu32 " metadata_size=%" PRIu32
-		       " dts=%" PRIu64 " next_dts=%" PRIu64 " sync=%d\n",
+		       " dts=%" PRIu64 " next_dts=%" PRIu64 " sync=%d ts=%" PRIu32 "\n",
 		       i,
 		       sample.size,
 		       sample.metadata_size,
 		       sample.dts,
 		       sample.next_dts,
-		       sample.sync);
+		       sample.sync,
+			   sample_ts);
 		i++;
 		printf("track sample %d\n", i);
 	} while (sample.size);
