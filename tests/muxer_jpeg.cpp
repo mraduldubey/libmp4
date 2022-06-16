@@ -156,7 +156,7 @@ int main(int argc, char **argv)
 	params.enabled = 1;
 	params.in_movie = 1;
 	params.in_preview = 0;
-	params.timescale = 15360;
+	params.timescale = 30000;
 	params.creation_time = 18446744071626706816;
 	params.modification_time = 18446744071626706816;
 	
