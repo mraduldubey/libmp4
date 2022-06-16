@@ -335,6 +335,11 @@ MP4_API int mp4_demux_seek(struct mp4_demux *demux,
 			   enum mp4_seek_method method,
 			   int *seekedToFrame);
 
+// seek mjpeg/mp4v videos using this method
+MP4_API int mp4_demux_seek_jpeg(struct mp4_demux *demux,
+			    uint64_t time_offset,
+			    enum mp4_seek_method method,
+			    int *seekedToFrame);
 
 MP4_API int mp4_demux_seek_to_track_prev_sample(struct mp4_demux *demux,
 						unsigned int track_id);

@@ -37,6 +37,7 @@
 #define ULOG_TAG mp4_demux_test
 #include "libmp4.h"
 #include <list.h>
+#include <iostream>
 
 #define DATE_SIZE 26
 
@@ -289,6 +290,43 @@ static void print_chapters(struct mp4_demux *demux)
 	printf("\n");
 }
 
+static void print_seek(struct mp4_demux *demux)
+{
+	struct mp4_track_info tk;
+	struct mp4_track_sample sample;
+	int i, count, ret, found = 0;
+	unsigned int id;
+
+	count = mp4_demux_get_track_count(demux);
+	if (count < 0) {
+		ULOG_ERRNO("mp4_demux_get_track_count", -count);
+		return;
+	}
+
+	for (i = 0; i < count; i++) {
+		ret = mp4_demux_get_track_info(demux, i, &tk);
+		if ((ret == 0) && (tk.type == MP4_TRACK_TYPE_VIDEO)) {
+			id = tk.id;
+			found = 1;
+			break;
+		}
+	}
+	printf("found: %d\n", found);
+	if (!found)
+		return;
+	
+	uint64_t skipMsecsInFile = 1622;
+	uint64_t time_offset_usec = skipMsecsInFile * 1000;
+	int seekedToFrame = -1;
+	int returnCode =
+		mp4_demux_seek_jpeg(demux,
+			       time_offset_usec,
+			       mp4_seek_method::MP4_SEEK_METHOD_NEXT_SYNC,
+			       &seekedToFrame);
+	std::cout << "returnCode<" << returnCode << ">\n";
+	// to determine the end of video
+	std::cout<< "offset <" << time_offset_usec << "> frame no<" << seekedToFrame << ">\n";
+ }
 
 static void print_frames(struct mp4_demux *demux)
 {
@@ -445,12 +483,13 @@ int main(int argc, char **argv)
 	printf("File '%s'\n", argv[1]);
 	printf("Processing time: %.2fms\n\n",
 	       (float)(end_time - start_time) / 1000.);
-	print_info(demux);
-	print_tracks(demux);
-	print_metadata(demux);
+	/*print_info(demux);
+	print_tracks(demux);*/
+	print_seek(demux);
+	//print_metadata(demux);
 	// print_chapters(demux);
 #if LOG_FRAMES
-	print_frames(demux);
+	//print_frames(demux);
 	printf("print frames done\n");
 #endif /* LOG_FRAMES */
 
