@@ -34,6 +34,8 @@
 #include <fstream>
 #include <sstream>
 #include <signal.h>
+#include <vector>
+#include <set>
 
 #include "libmp4.h"
 #include<list.h>
@@ -69,7 +71,7 @@ static char *mdata_audio_values[] = {"incredible machine",
 
 unsigned int mdata_audio_count = SIZEOF_ARRAY(mdata_audio_keys);
 
-std::string format_2(int x)
+	std::string format_2(int x)
 {
 	auto xStr = std::to_string(x);
 	if (x < 10)
@@ -136,7 +138,19 @@ int main(int argc, char **argv)
 	std::cout << "2\n";
 
 	int sample_count = 60;
-	
+	std::ifstream spsfile("data/bunny.mp4",std::ios::binary);
+	spsfile.seekg(0x00000274, std::ios::beg);
+	char *spsBuffer = (char *) malloc(23);
+	uint8_t *sps_Buffers = (uint8_t *)malloc(23);
+	spsfile.read(spsBuffer, 23);
+	memcpy(sps_Buffers, spsBuffer, 23);
+
+	spsfile.seekg(0, spsfile.beg);
+	spsfile.seekg(0x0000028e, std::ios::beg);
+	char *ppsBuffer = (char *)malloc(4);
+	uint8_t *pps_Buffers = (uint8_t *)malloc(4);
+	spsfile.read(ppsBuffer, 4);
+	memcpy(pps_Buffers, ppsBuffer, 4);
 	// params
 	struct mp4_mux_track_params params;
 	params.type = MP4_TRACK_TYPE_VIDEO;
@@ -149,19 +163,19 @@ int main(int argc, char **argv)
 	params.modification_time = 18446744071626706816;
 	
 	// for MP4_TRACK_TYPE_VIDEO
-	uint8_t tempsps = 39;
-	uint8_t *sps_temp = &tempsps;
-	uint8_t temppps = 40;
-	uint8_t *pps_temp = &temppps;
+
+	uint8_t *sps_temp = sps_Buffers;
+	uint8_t *pps_temp = pps_Buffers;
+	
 	videotrack = mp4_mux_add_track(mux, &params);
 	struct mp4_video_decoder_config vdc;
-	vdc.width = 960;
-	vdc.height = 480;
+	vdc.width = 424;
+	vdc.height = 240;
 	vdc.codec = MP4_VIDEO_CODEC_AVC;
 	vdc.avc.sps = sps_temp;
 	vdc.avc.pps = pps_temp;
 	vdc.avc.pps_size = 4;
-	vdc.avc.sps_size = 35;
+	vdc.avc.sps_size = 23;
 
 	mp4_mux_track_set_video_decoder_config(mux, videotrack, &vdc);
 	std::cout << "3\n";
@@ -170,13 +184,20 @@ int main(int argc, char **argv)
 	current_track = videotrack;
 
 	// read h264 encoded frames
-	std::string prefPath = "../data/H264_YUV420_640x360/Raw_YUV420_640x360_00"; //xy.h264
+	std::string prefPath = "data/outFrames/" ; //xy.h264
 	std::string sufPath = ".h264"; 
 
 	
 	int i = 0;
 	bool isKeyFrame;
-	for (i = 0; i < 42; ++i) // has_more_video
+	std::ifstream syncfile("data/SyncNumber.txt");
+	std::set<int> syncNumbers;
+	std::string linep;
+	while (getline(syncfile, linep))
+	{
+		syncNumbers.insert(std::stoi(linep));
+	}
+	for (i = 0; i < 14316; ++i) // has_more_video
 	{	
 		std::cout << "frame=>" << std::to_string(i + 1) <<"\n";
 		struct mp4_track_sample sample;
@@ -184,7 +205,7 @@ int main(int argc, char **argv)
 		int lc_video = 0;
 		step_ts += increment_ts;
 
-		if (i == 30 || i == 0)
+		if (syncNumbers.find(i) != syncNumbers.end())
 		{
 			isKeyFrame = true;
 		}
@@ -193,7 +214,7 @@ int main(int argc, char **argv)
 			isKeyFrame = false;
 		}
 		std::string fNoStr = format_2(i);
-		std::string framePath = prefPath + fNoStr + sufPath;
+		std::string framePath = prefPath + std::to_string(i) + sufPath;
 		std::ifstream file(framePath, std::ios::binary | std::ios::ate);
 		std::streamsize size = file.tellg();
 		file.seekg(0, std::ios::beg);
@@ -204,7 +225,7 @@ int main(int argc, char **argv)
 
 		if (crash_at == i + 1) // crash at i +1 th frame
 		{
-			raise(SIGSEGV);
+			//raise(SIGSEGV);
 		}
 
 		if (file.read(buffer, size))
