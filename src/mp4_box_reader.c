@@ -1686,7 +1686,7 @@ static off_t mp4_box_stsd_read(struct mp4_file *mp4,
 			uint16_t dataReferenceIndex = ntohl(val16);
 			ULOGD("- stsd: size=%d", dataReferenceIndex);
 
-			char str[1000];
+			char str[100];
 			unsigned int k;
 			for (k = 0;
 			     (k < sizeof(str) - 2) && (boxReadBytes < maxBytes);
