@@ -234,7 +234,7 @@ int main(int argc, char **argv)
 			mux_sample.buffer = (uint8_t *) buffer;
 			mux_sample.len = size;
 			mux_sample.sync = isKeyFrame ? 1 : 0;
-			mux_sample.dts = 512 * i; // harcoded - dts ?
+			mux_sample.dts = 512 * i; // harcoded - dts ?DemuxAndParserState
 			std::cout << "sample add start\n";
 			mp4_mux_track_add_sample(mux, videotrack, &mux_sample);
 			std::cout<<"sample done" << i << std::endl;

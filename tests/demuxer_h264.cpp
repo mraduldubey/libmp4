@@ -331,10 +331,10 @@ static void print_frames(struct mp4_demux *demux)
 		return;
 
 	i = 0;
-	char *filename1 = "data/SyncNumber.txt";
+	char *filename1 = "data/SyncNumber1.txt";
 	FILE *fSync = fopen(filename1, "w");
-	std::string fsps = "data/sps_size.txt";
-	std::string fpps = "data/pps_size.txt";
+	std::string fsps = "data/sps_size1.txt";
+	std::string fpps = "data/pps_size1.txt";
 	std::ofstream sps_file;
 	std::ofstream pps_file;
 	sps_file.open(fsps, std::ios::binary | std::ios::ate | std::ios::app);
@@ -398,7 +398,13 @@ static void write_frames(struct mp4_demux *demux)
 	struct mp4_track_sample sample;
 	int i, count, ret, found = 0;
 	unsigned int id;
-
+	const uint8_t *sps1 = (uint8_t*)malloc(sizeof(22));
+	unsigned int sps_size1=22;
+	const uint8_t *pps1 = (uint8_t *)malloc(sizeof(4));
+	unsigned int pps_size1=4;
+	uint8_t *avcc1 = (uint8_t *)malloc(sizeof(uint8_t *));
+	unsigned int *avcc_size1 = (unsigned int*)malloc(sizeof(uint8_t *));
+	mp4_generate_avc_decoder_config(sps1,sps_size1,pps1, pps_size1,	avcc1,avcc_size1);
 	count = mp4_demux_get_track_count(demux);
 	if (count < 0) {
 		ULOG_ERRNO("mp4_demux_get_track_count", -count);
@@ -423,7 +429,7 @@ static void write_frames(struct mp4_demux *demux)
 		uint8_t *buffer = new uint8_t[sample.size];
 		memcpy(buffer, bigBuffer, sample.size);
 		std::string fNoStr = format_2(i);
-		std::string outPath = "data/outFrames/" + std::to_string(i);
+		std::string outPath = "data/outFrames1/" + std::to_string(i) ;
 		std::string extension = ".h264";
 		std::string framePath = outPath + extension;
 		std::cout << framePath << "\n";
