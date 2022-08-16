@@ -1,3 +1,0 @@
-/mnt/disks/ssd/ws/libmp4/libfutils/CMakeFiles/rebuild_cache.dir
-/mnt/disks/ssd/ws/libmp4/libfutils/CMakeFiles/libfutils.dir
-/mnt/disks/ssd/ws/libmp4/libfutils/CMakeFiles/edit_cache.dir
