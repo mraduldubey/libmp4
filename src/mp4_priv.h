@@ -145,6 +145,10 @@
 #define MP4_METADATA_TAG_TYPE_VERSION       0x00737772 /* ".swr" */
 #define MP4_METADATA_TAG_TYPE_ENCODER       0x00746f6f /* ".too" */
 #define MP4_METADATA_TAG_TYPE_COVER         0x636f7672 /* "covr" */
+// custom tags added by apra labs
+/* Or add a new custom tag with the corresponding hex representation of all character's ascii value, like following */
+/* Note that first char will be ignored because while reading a mask (0xFFFF) on last 24 bits will be applied */
+#define MP4_METADATA_TAG_TYPE_STS			0x00737473 /* ".sts" */
 /* clang-format on */
 
 #define MP4_METADATA_KEY_COVER "com.apple.quicktime.artwork"
@@ -239,6 +243,7 @@ struct mp4_track {
 	uint32_t chunkCount;
 	uint64_t *chunkOffset;
 	uint32_t timeToSampleEntryCount;
+	bool direction;
 	struct mp4_time_to_sample_entry *timeToSampleEntries;
 	uint32_t sampleToChunkEntryCount;
 	struct mp4_sample_to_chunk_entry *sampleToChunkEntries;

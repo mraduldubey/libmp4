@@ -328,7 +328,7 @@ static void print_seek(struct mp4_demux *demux)
 	std::cout<< "offset <" << time_offset_usec << "> frame no<" << seekedToFrame << ">\n";
  }
 
-static void print_frames(struct mp4_demux *demux)
+static void print_frames(struct mp4_demux *demux, char rev)
 {
 	struct mp4_track_info tk;
 	struct mp4_track_sample sample;
@@ -349,14 +349,40 @@ static void print_frames(struct mp4_demux *demux)
 			break;
 		}
 	}
-	printf("%d", found);
+	printf("found=>%d\n", found);
 	if (!found)
 		return;
-
+	// set the track to end
+	if (rev == 'r') 
+	{
+		mp4_set_reader_pos_lastframe(demux, id, false);
+	}
 	i = 0;
+	char ch = rev, prev = 'x';
 	do {
-		ret = mp4_demux_get_track_sample(
-			demux, id, 1, NULL, 0, NULL, 0, &sample);
+		//std::cin >> ch; 
+		if (ch == 'n')
+		{
+			if (prev == 'r')
+			{
+				mp4_demux_toggle_playback(demux, id);
+			}
+			prev = ch;
+			std::cout << "fwd read\n";
+			ret = mp4_demux_get_track_sample(
+				demux, id, 1, NULL, 0, NULL, 0, &sample);
+		} 
+		else if (ch == 'r')
+		{
+			if (prev == 'n')
+			{
+				mp4_demux_toggle_playback(demux, id);
+			}
+			prev = ch;
+			std::cout << "bwd read\n";
+			ret = mp4_demux_get_track_sample_rev(
+				demux, id, 1, NULL, 0, NULL, 0, &sample);
+		}
 		if (ret < 0 || sample.size == 0) {
 			printf("sample size is zero %d", sample.size);
 			ULOG_ERRNO("mp4_demux_get_track_sample", -ret);
@@ -375,6 +401,11 @@ static void print_frames(struct mp4_demux *demux)
 		       sample.next_dts,
 		       sample.sync,
 			   sample_ts);
+		/* print timestamp acc to filename here */
+		uint64_t sample_ts_usec = mp4_sample_time_to_usec(sample.dts, timescale);
+		auto frameTSInMsecs = sample_ts_usec / 1000;
+		printf("frame TS offset: %lld msecs\n", frameTSInMsecs);
+
 		i++;
 		printf("track sample %d\n", i);
 	} while (sample.size);
@@ -485,11 +516,11 @@ int main(int argc, char **argv)
 	       (float)(end_time - start_time) / 1000.);
 	/*print_info(demux);
 	print_tracks(demux);*/
-	print_seek(demux);
+	//print_seek(demux);
 	//print_metadata(demux);
 	// print_chapters(demux);
 #if LOG_FRAMES
-	//print_frames(demux);
+	print_frames(demux, 'r');
 	printf("print frames done\n");
 #endif /* LOG_FRAMES */
 

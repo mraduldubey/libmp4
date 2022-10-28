@@ -141,10 +141,14 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	
-	const char *temp1 = "\251too";
-	const char *temp2 = "Lavf58.65.101";
-	
-	mp4_mux_add_file_metadata(mux, temp1, temp2);
+	const char *key = "\251too";
+	const char *val = "Lavf58.65.101";
+	mp4_mux_add_file_metadata(mux, key, val);
+
+	const char *temp3 = "\251sts";
+	const char *temp4 = "12345678911412";
+	mp4_mux_add_file_metadata(mux, temp3, temp4);
+
 	std::cout << "2\n";
 
 	int sample_count = 60;
@@ -217,7 +221,7 @@ int main(int argc, char **argv)
 	file.seekg(0, std::ios::beg);
 	char *buffer = new char[size];
 	file.read(buffer, size);
-	for (i = 1; i < 3000; ++i) // has_more_video
+	for (i = 1; i < 10; ++i) // has_more_video
 	{	
 		std::cout << "frame=>" << std::to_string(i) <<"\n";
 

@@ -295,6 +295,19 @@ mp4_demux_get_track_audio_specific_config(struct mp4_demux *demux,
 					  uint8_t **audio_specific_config,
 					  unsigned int *asc_size);
 
+MP4_API void mp4_set_reader_pos_lastframe(struct mp4_demux *demux, unsigned int track_id, bool direction);
+
+MP4_API void mp4_demux_toggle_playback(struct mp4_demux *demux, unsigned int track_id);
+
+MP4_API int
+mp4_demux_get_track_sample_rev(struct mp4_demux *demux,
+			       unsigned int track_id,
+			       int advance,
+			       uint8_t *sample_buffer,
+			       unsigned int sample_buffer_size,
+			       uint8_t *metadata_buffer,
+			       unsigned int metadata_buffer_size,
+			       struct mp4_track_sample *track_sample);
 
 MP4_API int mp4_demux_get_track_sample(struct mp4_demux *demux,
 				       unsigned int track_id,
