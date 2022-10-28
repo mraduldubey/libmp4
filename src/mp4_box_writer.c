@@ -267,7 +267,7 @@ mp4_box_tkhd_write(struct mp4_mux *mux, struct mp4_box *box, size_t maxBytes)
 	val32 = htonl(0x00010000);
 	MP4_WRITE_32(mux->file, val32, bytesWritten, maxBytes);
 	skip = 12;
-	MP4_WRITE_SKIP(mux->file, skip, bytesWritten, maxBytes);
+	MP4_WRITE_C(mux->file, skip, bytesWritten, maxBytes);
 	MP4_WRITE_32(mux->file, val32, bytesWritten, maxBytes);
 	MP4_WRITE_SKIP(mux->file, skip, bytesWritten, maxBytes);
 	val32 = htonl(0x40000000);

@@ -521,7 +521,6 @@ struct mp4_mux {
 		_writeBytes += _i_nBytes;                                      \
 	} while (0)
 
-
 #define MP4_WRITE_CHECK_SIZE(_file, _computedSize, _actualSize)                \
 	do {                                                                   \
 		if (_computedSize != _actualSize) {                            \

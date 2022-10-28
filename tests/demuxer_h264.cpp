@@ -303,6 +303,10 @@ static void print_chapters(struct mp4_demux *demux)
 
 static void print_frames(struct mp4_demux *demux)
 {
+ 	unsigned int track_id = 1;
+	struct mp4_video_decoder_config *vdc =
+		(mp4_video_decoder_config *)malloc(
+			sizeof(mp4_video_decoder_config));
 	struct mp4_track_info tk;
 	struct mp4_track_sample sample;
 	int i, count, ret, found = 0;
@@ -327,9 +331,20 @@ static void print_frames(struct mp4_demux *demux)
 		return;
 
 	i = 0;
-	do {
+	char *filename1 = "data/SyncNumber1.txt";
+	FILE *fSync = fopen(filename1, "w");
+	std::string fsps = "data/sps_size1.txt";
+	std::string fpps = "data/pps_size1.txt";
+	std::ofstream sps_file;
+	std::ofstream pps_file;
+	sps_file.open(fsps, std::ios::binary | std::ios::ate | std::ios::app);
+	
+	pps_file.open(fpps, std::ios::binary | std::ios::ate | std::ios::app);
+	do
+	{
 		ret = mp4_demux_get_track_sample(
 			demux, id, 1, NULL, 0, NULL, 0, &sample);
+
 		if (ret < 0 || sample.size == 0) {
 			printf("sample size is zero %d", sample.size);
 			ULOG_ERRNO("mp4_demux_get_track_sample", -ret);
@@ -346,12 +361,33 @@ static void print_frames(struct mp4_demux *demux)
 		       sample.dts,
 		       sample.next_dts,
 		       sample.sync);
+
+		if (sample.sync) {
+			fprintf(fSync, "%d\n", i);
+		}
+		ret = mp4_demux_get_track_video_decoder_config(
+			demux, track_id, vdc);
+		uint8_t *sps_buffer = (uint8_t*)malloc(sizeof(vdc->avc.sps_size));
+		uint8_t *pps_buffer = (uint8_t *)malloc(sizeof(vdc->avc.pps_size));
+		memcpy(sps_buffer, vdc->avc.sps, vdc->avc.sps_size);
+		memcpy(pps_buffer, vdc->avc.pps, vdc->avc.pps_size);
+		if (vdc->avc.sps_size) {
+			sps_file << sps_buffer;
+			sps_file << "\n";
+		}
+		if (vdc->avc.pps_size) {
+			pps_file << pps_buffer;
+			pps_file << "\n";
+		}
 		i++;
+
 		printf("track sample %d\n", i);
-
-
-	} while (sample.size);
-
+		
+	}
+	while (sample.size);
+	fclose(fSync);
+	sps_file.close();
+	pps_file.close();
 	printf("done");
 	printf("\n");
 }
@@ -362,7 +398,13 @@ static void write_frames(struct mp4_demux *demux)
 	struct mp4_track_sample sample;
 	int i, count, ret, found = 0;
 	unsigned int id;
-
+	const uint8_t *sps1 = (uint8_t*)malloc(sizeof(22));
+	unsigned int sps_size1=22;
+	const uint8_t *pps1 = (uint8_t *)malloc(sizeof(4));
+	unsigned int pps_size1=4;
+	uint8_t *avcc1 = (uint8_t *)malloc(sizeof(uint8_t *));
+	unsigned int *avcc_size1 = (unsigned int*)malloc(sizeof(uint8_t *));
+	mp4_generate_avc_decoder_config(sps1,sps_size1,pps1, pps_size1,	avcc1,avcc_size1);
 	count = mp4_demux_get_track_count(demux);
 	if (count < 0) {
 		ULOG_ERRNO("mp4_demux_get_track_count", -count);
@@ -387,9 +429,9 @@ static void write_frames(struct mp4_demux *demux)
 		uint8_t *buffer = new uint8_t[sample.size];
 		memcpy(buffer, bigBuffer, sample.size);
 		std::string fNoStr = format_2(i);
-		std::string outPath = "data/outFrames/frame0";
+		std::string outPath = "data/outFrames1/" + std::to_string(i) ;
 		std::string extension = ".h264";
-		std::string framePath = outPath + fNoStr + extension;
+		std::string framePath = outPath + extension;
 		std::cout << framePath << "\n";
 		std::ofstream file(framePath, std::ios::binary | std::ios::ate);
 		file.write(reinterpret_cast<char *>(buffer), sample.size);
@@ -472,11 +514,16 @@ static void usage(char *prog_name)
 
 int main(int argc, char **argv)
 {
+
 	int ret = 0, status = EXIT_SUCCESS;
+	int rett = 0;
 	struct mp4_demux *demux;
 	struct timespec ts = {0, 0};
 	uint64_t start_time = 0, end_time = 0;
+	struct mp4_file *mp4;
+	struct mp4_track *tk = NULL;
 
+	// ret = get_seek_sample(track, start_time, 0);
 	welcome(argv[0]);
 
 	if (argc < 2) {
