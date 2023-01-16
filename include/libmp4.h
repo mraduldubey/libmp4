@@ -342,6 +342,9 @@ MP4_API int mp4_demux_get_track_next_sample_time_after(struct mp4_demux *demux,
 						       int sync,
 						       uint64_t *sample_time);
 
+MP4_API int mp4_demux_time_range(struct mp4_demux *demux,
+			 uint64_t *start_ts,
+			 uint64_t *duration);
 
 MP4_API int mp4_demux_seek(struct mp4_demux *demux,
 			   uint64_t time_offset,

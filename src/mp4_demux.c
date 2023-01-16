@@ -171,9 +171,6 @@ int mp4_demux_open(const char *filename, struct mp4_demux **ret_obj)
 	list_init(&mp4->tracks);
 
 	mp4->file = fopen(filename, "rb");
-	auto fd = _fileno(mp4->file); //(uint64_t)mp4->file;
-	printf("\n==========fopen fd==========, %" PRId64 "\n", fd);
-	
 
 	if (mp4->file == NULL) {
 		ret = -errno;
@@ -338,6 +335,59 @@ get_seek_sample(struct mp4_track *tk, int start, enum mp4_seek_method method)
 	}
 }
 
+int mp4_demux_time_range(struct mp4_demux *demux, uint64_t *start_ts, uint64_t *duration)
+{
+	char **keys = NULL;
+	char **values = NULL;
+	unsigned int count = 0;
+	int ret = mp4_demux_get_metadata_strings(demux, &count, &keys, &values);
+	if (ret < 0) {
+		return -1;
+	}
+
+	uint64_t startTimeStamp = 0;
+	if (count > 0) {
+		for (auto i = 0; i < count; i++) {
+			if ((keys[i]) && (values[i])) {
+				if (!strcmp(keys[i], "\251too")) {
+					printf("keys %s, val %s\n",
+					       keys[i],
+					       values[i]);
+				}
+				if (!strcmp(keys[i], "\251sts")) {
+					startTimeStamp =
+						strtoll(values[i], NULL, 10);
+					printf("keys %s, val %s, ts %lld\n",
+					       keys[i],
+					       values[i], startTimeStamp);
+				}
+			}
+		}
+	}
+	*start_ts = startTimeStamp;
+
+	// end timestamp
+	struct mp4_track *tk = NULL;
+	struct mp4_file *mp4;
+
+	ULOG_ERRNO_RETURN_ERR_IF(demux == NULL, EINVAL);
+
+	mp4 = &demux->mp4;
+
+	struct list_node *start = &mp4->tracks;
+	uint64_t duration_msecs = 0;
+	custom_walk(start, tk, node, struct mp4_track)
+	{
+		if (tk->type != MP4_TRACK_TYPE_VIDEO)
+			continue;
+
+		//uint64_t ts = mp4_usec_to_sample_time(time_offset, tk->timescale)
+		duration_msecs = mp4_sample_time_to_usec(tk->duration, tk->timescale) / 1000;
+	}
+	*duration = duration_msecs;
+
+	//printf("startTS %lld, endTS %lld\n", *start_ts, *end_ts);
+}
 
 int mp4_demux_seek(struct mp4_demux *demux,
 		   uint64_t time_offset,
